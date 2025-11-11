@@ -1,0 +1,40 @@
+#include <stencil_kernel.h>
+using namespace adf;
+
+void jacobi_2d3_i32(
+    adf::input_buffer<float, adf::extents<ROW>>& __restrict in0, 
+    adf::input_buffer<float, adf::extents<ROW>>& __restrict in1, 
+    adf::input_buffer<float, adf::extents<ROW>>& __restrict in2,
+    adf::output_buffer<float, adf::extents<ROW>>& __restrict out0
+) {
+    auto in0ptr = aie::begin_vector<w>(in0);
+    auto in1ptr = aie::begin_vector<w>(in1);
+    auto in2ptr = aie::begin_vector<w>(in2);
+    auto out0ptr = aie::begin_vector<w>(out0);
+
+    // 权重系数
+    aie::vector<float, w> k_center = aie::broadcast<float, w>(0.4f);
+    aie::vector<float, w> k_neighbor = aie::broadcast<float, w>(0.15f);
+    aie::accum<accfloat, w> acc = aie::zeros<accfloat, w>();
+
+    for (int i = 0; i < ROW / w; i++) {
+        auto top = *in0ptr++;
+        auto mid = *in1ptr++;
+        auto bot = *in2ptr++;
+
+        // 左右移实现列方向邻域
+        auto mid_left  = aie::shuffle_up(mid, 1);   // 向右移，相当于取左邻居
+        auto mid_right = aie::shuffle_down(mid, 1); // 向左移，相当于取右邻居
+
+
+        // 累加计算  (上下+左右+中心)
+        
+        acc = aie::mac(acc, mid, k_center);
+        acc = aie::mac(acc, top, k_neighbor);
+        acc = aie::mac(acc, bot, k_neighbor);
+        acc = aie::mac(acc, mid_left, k_neighbor);
+        acc = aie::mac(acc, mid_right, k_neighbor);
+
+        *out0ptr++ = acc;
+    }
+}

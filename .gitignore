@@ -1,0 +1,11 @@
+*.vcd
+*.log
+*.jou
+*.o
+*.a
+*.so
+*.xclbin
+*.xo
+*.xsa
+Work/
+aiesimulator_output/
