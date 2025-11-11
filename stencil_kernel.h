@@ -3,7 +3,7 @@
 #include <aie_api/aie_adf.hpp>
 #include "aie_api/utils.hpp"
 #include <stdio.h>
-#define __AIE_DEBUG__      // 开启调试打印宏
+#define __AIE_DEBUG__    
 
 
 
